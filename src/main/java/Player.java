@@ -1,12 +1,64 @@
-
-
+import java.io.PrintStream;
 import java.util.Scanner;
 
 /**
  * Auto-generated code below aims at helping you parse the standard input
  * according to the problem statement.
  **/
-class Player {
+public class Player {
+
+	public static interface GameCommunicator {
+
+		public int nextValue();
+
+		public boolean hasNext();
+
+		public void cutLink(int nodeA, int nodeB);
+
+	}
+
+	public static class SystemGameCommunicator implements GameCommunicator {
+		private Scanner in;
+		private PrintStream out;
+
+		public SystemGameCommunicator() {
+			this.in = new Scanner(System.in);
+			this.out = System.out;
+		}
+
+		public int nextValue() {
+			return in.nextInt();
+		}
+
+		public boolean hasNext() {
+			return in.hasNext();
+		}
+
+		public void cutLink(int nodeA, int nodeB) {
+			out.println(String.format("%1d %1d", nodeA, nodeB));
+		}
+	}
+
+	public static class Node {
+
+	}
+
+	public static class Game {
+
+		private GameCommunicator communicator;
+
+		public Game(GameCommunicator communicator) {
+			this.communicator = communicator;
+		}
+	}
+
+	public static class GameBuilder {
+
+		public Game createGame(GameCommunicator gameCommunicator) {
+			return null;
+		}
+
+	}
 
 	public static void main(String args[]) {
 		Scanner in = new Scanner(System.in);
