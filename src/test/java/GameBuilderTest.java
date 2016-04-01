@@ -19,13 +19,16 @@ public class GameBuilderTest {
 
 	@Test
 	public void should_return_game() {
-		// 2 nodes, 1 link, 1 gateway
 		int nbNodes = 2;
 		int nbLinks = 1;
 		int nbGateways = 1;
 		int gatewayId = 1;
 
-		List<Integer> inputs = Arrays.asList(nbNodes, nbLinks, nbGateways, 0, 1, gatewayId);
+		int nodeA = 0;
+		int nodeB = 1;
+
+		List<Integer> inputs = Arrays.asList(nbNodes, nbLinks, nbGateways, nodeA, nodeB, gatewayId);
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
 
 		Player.Game game = gameBuilder.createGame(gameCommunicator);
@@ -36,67 +39,138 @@ public class GameBuilderTest {
 		Assert.assertEquals(nbGateways, game.getGatewayIds().size());
 	}
 
+	/*
+	 * Number of Nodes
+	 */
+
 	@Test
-	public void should_have_a_least_2_nodes() {
+	public void should_read_nbNodes() {
+		int nbNodes = 2;
+		List<Integer> inputs = Arrays.asList(nbNodes);
+
+		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
+
+		Assert.assertEquals(nbNodes, gameBuilder.readNbNodes(gameCommunicator));
+	}
+
+	@Test
+	public void should_have_at_least_2_nodes() {
 		List<Integer> inputs = Arrays.asList(1);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of nodes"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbNodes(gameCommunicator);
 	}
 
 	@Test
-	public void should_have_a_most_500_nodes() {
+	public void should_have_at_most_500_nodes() {
 		List<Integer> inputs = Arrays.asList(501);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of nodes"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbNodes(gameCommunicator);
+	}
+
+	/*
+	 * Number of Links
+	 */
+
+	@Test
+	public void should_read_nbLinks() {
+		int nbLinks = 2;
+		List<Integer> inputs = Arrays.asList(nbLinks);
+
+		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
+
+		Assert.assertEquals(nbLinks, gameBuilder.readNbLinks(gameCommunicator));
 	}
 
 	@Test
-	public void should_have_a_least_1_link() {
-		List<Integer> inputs = Arrays.asList(2, 0);
+	public void should_have_at_least_1_link() {
+		List<Integer> inputs = Arrays.asList(0);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of links"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbLinks(gameCommunicator);
 	}
 
 	@Test
-	public void should_have_a_most_1000_link() {
-		List<Integer> inputs = Arrays.asList(2, 1001);
+	public void should_have_at_most_1000_link() {
+		List<Integer> inputs = Arrays.asList(1001);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of links"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbLinks(gameCommunicator);
+	}
+
+	/*
+	 * Number of Gateways
+	 */
+
+	@Test
+	public void should_read_nbGateways() {
+		int nbNodes = 2;
+		int nbGateways = 1;
+		List<Integer> inputs = Arrays.asList(nbGateways);
+
+		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
+
+		Assert.assertEquals(nbGateways, gameBuilder.readNbGateways(gameCommunicator, nbNodes));
 	}
 
 	@Test
-	public void should_have_a_least_1_gateway() {
-		List<Integer> inputs = Arrays.asList(2, 1, 0);
+	public void should_have_at_least_1_gateway() {
+		int nbNodes = 2;
+		int nbGateways = 0;
+		List<Integer> inputs = Arrays.asList(nbGateways);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of gateways"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbGateways(gameCommunicator, nbNodes);
 	}
 
 	@Test
-	public void should_have_a_most_20_gateways() {
-		List<Integer> inputs = Arrays.asList(2, 1, 21);
+	public void should_have_at_most_20_gateways() {
+		int nbNodes = 2;
+		int nbGateways = 21;
+		List<Integer> inputs = Arrays.asList(nbGateways);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of gateways"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbGateways(gameCommunicator, nbNodes);
 	}
 
 	@Test
 	public void should_have_less_gateway_than_nodes() {
-		List<Integer> inputs = Arrays.asList(2, 1, 2);
+		int nbNodes = 2;
+		int nbGateways = 21;
+
+		List<Integer> inputs = Arrays.asList(nbGateways);
+
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid number of gateways"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readNbGateways(gameCommunicator, nbNodes);
 	}
 
 	/**
@@ -104,23 +178,35 @@ public class GameBuilderTest {
 	 */
 	@Test
 	public void should_link_two_existing_node() {
-		List<Integer> inputs = Arrays.asList(2, 1, 1, -1, 0);
+		int nbNodes = 2;
+		int nbLinks = 1;
+
+		List<Integer> inputs = Arrays.asList(-1, 0);
+
 		expectedException.expect(IllegalArgumentException.class);
-		expectedException.expectMessage(Matchers.equalTo("Invalid link definition"));
+		expectedException.expectMessage(Matchers.equalTo("Invalid node index"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readGraph(gameCommunicator, nbNodes, nbLinks);
 	}
 
 	/**
 	 * Gateway checks
 	 */
 	@Test
-	public void should_have_a_correct_gateway() {
-		List<Integer> inputs = Arrays.asList(2, 1, 1, 0, 1, 5);
+	public void should_have_a_correct_gateway_index() {
+		// gateway index is > nbNodes
+		List<Integer> inputs = Arrays.asList(5);
+		int nbNodes = 2;
+		int nbGateways = 1;
+
 		expectedException.expect(IllegalArgumentException.class);
-		expectedException.expectMessage(Matchers.equalTo("Invalid gateway definition"));
+		expectedException.expectMessage(Matchers.equalTo("Invalid node index"));
+
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
-		gameBuilder.createGame(gameCommunicator);
+
+		gameBuilder.readGateways(gameCommunicator, nbNodes, nbGateways);
 	}
 
 }

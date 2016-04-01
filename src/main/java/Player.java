@@ -108,18 +108,30 @@ class Player {
 	public static class GameBuilder {
 
 		public Game createGame(GameCommunicator gameCommunicator) {
-			Map<Integer, Node> nodes = readNodes(gameCommunicator);
+			int nbNodes = readNbNodes(gameCommunicator);
 
 			int nbLinks = readNbLinks(gameCommunicator);
 
-			int nbGateways = readNbGateways(gameCommunicator, nodes.size());
+			int nbGateways = readNbGateways(gameCommunicator, nbNodes);
+
+			Map<Integer, Node> nodes = readGraph(gameCommunicator, nbNodes, nbLinks);
+
+			Set<Integer> gatewayIds = readGateways(gameCommunicator, nodes.size(), nbGateways);
+
+			return new Game(gameCommunicator, nodes, gatewayIds);
+		}
+
+		Map<Integer, Node> readGraph(GameCommunicator gameCommunicator, int nbNodes, int nbLinks) {
+			Map<Integer, Node> nodes = new HashMap<>();
+
+			// Node map initialization
+			for (int i = 0; i < nbNodes; i++) {
+				nodes.put(i, new Node(i));
+			}
 
 			for (int i = 0; i < nbLinks; i++) {
-				int nodeAId = gameCommunicator.nextValue();
-				int nodeBId = gameCommunicator.nextValue();
-				if (nodeAId < 0 || nodeBId < 0 || nodeAId >= nodes.size() || nodeBId >= nodes.size()) {
-					throw new IllegalArgumentException("Invalid link definition");
-				}
+				int nodeAId = readNodeIndex(gameCommunicator, nodes.size());
+				int nodeBId = readNodeIndex(gameCommunicator, nodes.size());
 				logger.debug("Link " + nodeAId + " " + nodeBId);
 
 				Node nodeA = nodes.get(nodeAId);
@@ -129,34 +141,17 @@ class Player {
 				nodeA.addPeer(nodeBId);
 			}
 
-			Set<Integer> gatewayIds = new HashSet<Integer>();
-			for (int i = 0; i < nbGateways; i++) {
-				int gatewayId = gameCommunicator.nextValue();
-				if (gatewayId < 0 || gatewayId >= nodes.size()) {
-					throw new IllegalArgumentException("Invalid gateway definition");
-				}
-				logger.debug("Gateway " + gatewayId);
-
-				gatewayIds.add(gatewayId);
-			}
-
-			return new Game(gameCommunicator, nodes, gatewayIds);
+			return nodes;
 		}
 
-		Map<Integer, Node> readNodes(GameCommunicator gameCommunicator) {
-			Map<Integer, Node> nodes = new HashMap<>();
-
+		int readNbNodes(GameCommunicator gameCommunicator) {
 			int nbNodes = gameCommunicator.nextValue();
 			if (nbNodes < MIN_NODES || nbNodes > MAX_NODES) {
 				throw new IllegalArgumentException("Invalid number of nodes");
 			}
 			logger.debug("Nb Nodes = " + nbNodes);
 
-			// populate node Map
-			for (int i = 0; i < nbNodes; i++) {
-				nodes.put(i, new Node(i));
-			}
-			return nodes;
+			return nbNodes;
 		}
 
 		int readNbLinks(GameCommunicator gameCommunicator) {
@@ -176,6 +171,25 @@ class Player {
 			logger.debug("Nb Gateways = " + nbGateways);
 
 			return nbGateways;
+		}
+
+		Set<Integer> readGateways(GameCommunicator gameCommunicator, int nbNodes, int nbGateways) {
+			Set<Integer> gatewayIds = new HashSet<Integer>();
+			for (int i = 0; i < nbGateways; i++) {
+				int gatewayId = readNodeIndex(gameCommunicator, nbNodes);
+				logger.debug("Gateway " + gatewayId);
+
+				gatewayIds.add(gatewayId);
+			}
+			return gatewayIds;
+		}
+
+		int readNodeIndex(GameCommunicator gameCommunicator, int nbNodes) {
+			int nodeId = gameCommunicator.nextValue();
+			if (nodeId < 0 || nodeId >= nbNodes) {
+				throw new IllegalArgumentException("Invalid node index");
+			}
+			return nodeId;
 		}
 
 	}
