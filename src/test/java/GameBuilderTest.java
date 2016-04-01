@@ -44,7 +44,7 @@ public class GameBuilderTest {
 	 */
 
 	@Test
-	public void should_read_nbNodes() {
+	public void testReadNbNodes() {
 		int nbNodes = 2;
 		List<Integer> inputs = Arrays.asList(nbNodes);
 
@@ -54,7 +54,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_at_least_2_nodes() {
+	public void testReadNbNodes_fail_at_least_2_nodes() {
 		List<Integer> inputs = Arrays.asList(1);
 
 		expectedException.expect(IllegalArgumentException.class);
@@ -66,7 +66,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_at_most_500_nodes() {
+	public void testReadNbNodes_fail_at_most_500_nodes() {
 		List<Integer> inputs = Arrays.asList(501);
 
 		expectedException.expect(IllegalArgumentException.class);
@@ -82,7 +82,7 @@ public class GameBuilderTest {
 	 */
 
 	@Test
-	public void should_read_nbLinks() {
+	public void testReadNbLinks() {
 		int nbLinks = 2;
 		List<Integer> inputs = Arrays.asList(nbLinks);
 
@@ -92,7 +92,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_at_least_1_link() {
+	public void testReadNbLinks_fail_at_least_1_link() {
 		List<Integer> inputs = Arrays.asList(0);
 
 		expectedException.expect(IllegalArgumentException.class);
@@ -104,7 +104,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_at_most_1000_link() {
+	public void testReadNbLinks_fail_at_most_1000_link() {
 		List<Integer> inputs = Arrays.asList(1001);
 
 		expectedException.expect(IllegalArgumentException.class);
@@ -120,7 +120,7 @@ public class GameBuilderTest {
 	 */
 
 	@Test
-	public void should_read_nbGateways() {
+	public void testReadNbGateways() {
 		int nbNodes = 2;
 		int nbGateways = 1;
 		List<Integer> inputs = Arrays.asList(nbGateways);
@@ -131,7 +131,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_at_least_1_gateway() {
+	public void testReadNbGateways_fail_at_least_1_gateway() {
 		int nbNodes = 2;
 		int nbGateways = 0;
 		List<Integer> inputs = Arrays.asList(nbGateways);
@@ -145,7 +145,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_at_most_20_gateways() {
+	public void testReadNbGateways_fail_at_most_20_gateways() {
 		int nbNodes = 2;
 		int nbGateways = 21;
 		List<Integer> inputs = Arrays.asList(nbGateways);
@@ -159,7 +159,7 @@ public class GameBuilderTest {
 	}
 
 	@Test
-	public void should_have_less_gateway_than_nodes() {
+	public void testReadNbGateways_fail_less_gateway_than_nodes() {
 		int nbNodes = 2;
 		int nbGateways = 21;
 
@@ -177,7 +177,7 @@ public class GameBuilderTest {
 	 * Links checks
 	 */
 	@Test
-	public void should_link_two_existing_node() {
+	public void testReadGraph_fail_link_two_existing_node() {
 		int nbNodes = 2;
 		int nbLinks = 1;
 
@@ -195,7 +195,7 @@ public class GameBuilderTest {
 	 * Gateway checks
 	 */
 	@Test
-	public void should_have_a_correct_gateway_index() {
+	public void testReadGateways_fail_incorrect_gateway_index() {
 		// gateway index is > nbNodes
 		List<Integer> inputs = Arrays.asList(5);
 		int nbNodes = 2;

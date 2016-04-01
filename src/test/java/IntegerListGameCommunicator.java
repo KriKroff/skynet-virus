@@ -14,11 +14,6 @@ public class IntegerListGameCommunicator implements Player.GameCommunicator {
 	}
 
 	@Override
-	public boolean hasNext() {
-		return inputs.hasNext();
-	}
-
-	@Override
 	public void cutLink(int nodeA, int nodeB) {
 	}
 

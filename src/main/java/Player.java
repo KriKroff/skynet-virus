@@ -29,8 +29,6 @@ class Player {
 
 		public int nextValue();
 
-		public boolean hasNext();
-
 		public void cutLink(int nodeA, int nodeB);
 
 	}
@@ -46,10 +44,6 @@ class Player {
 
 		public int nextValue() {
 			return in.nextInt();
-		}
-
-		public boolean hasNext() {
-			return in.hasNext();
 		}
 
 		public void cutLink(int nodeA, int nodeB) {
