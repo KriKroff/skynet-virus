@@ -7,6 +7,9 @@ import java.util.Scanner;
  **/
 public class Player {
 
+	private static final int MIN_NODES = 2;
+	private static final int MAX_NODES = 500;
+
 	public static interface GameCommunicator {
 
 		public int nextValue();
@@ -55,6 +58,11 @@ public class Player {
 	public static class GameBuilder {
 
 		public Game createGame(GameCommunicator gameCommunicator) {
+			int nbNodes = gameCommunicator.nextValue();
+
+			if (nbNodes < MIN_NODES || nbNodes > MAX_NODES) {
+				throw new IllegalArgumentException("Invalid number of nodes");
+			}
 			return null;
 		}
 
