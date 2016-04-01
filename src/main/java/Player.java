@@ -1,3 +1,4 @@
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Scanner;
 
@@ -5,10 +6,24 @@ import java.util.Scanner;
  * Auto-generated code below aims at helping you parse the standard input
  * according to the problem statement.
  **/
-public class Player {
+class Player {
+
+	private static final Logger logger = new Logger();
 
 	private static final int MIN_NODES = 2;
 	private static final int MAX_NODES = 500;
+
+	private static final int MIN_LINKS = 1;
+	private static final int MAX_LINKS = 1000;
+
+	private static final int MIN_GATEWAYS = 1;
+	private static final int MAX_GATEWAYS = 20;
+
+	public static class Logger {
+		public void debug(String message) {
+			System.err.println(message);
+		}
+	}
 
 	public static interface GameCommunicator {
 
@@ -20,13 +35,13 @@ public class Player {
 
 	}
 
-	public static class SystemGameCommunicator implements GameCommunicator {
+	public static class StreamGameCommunicator implements GameCommunicator {
 		private Scanner in;
 		private PrintStream out;
 
-		public SystemGameCommunicator() {
-			this.in = new Scanner(System.in);
-			this.out = System.out;
+		public StreamGameCommunicator(InputStream in, PrintStream out) {
+			this.in = new Scanner(in);
+			this.out = out;
 		}
 
 		public int nextValue() {
@@ -59,41 +74,65 @@ public class Player {
 
 		public Game createGame(GameCommunicator gameCommunicator) {
 			int nbNodes = gameCommunicator.nextValue();
-
 			if (nbNodes < MIN_NODES || nbNodes > MAX_NODES) {
 				throw new IllegalArgumentException("Invalid number of nodes");
 			}
-			return null;
+			logger.debug("Nb Nodes = " + nbNodes);
+
+			int nbLinks = gameCommunicator.nextValue();
+			if (nbLinks < MIN_LINKS || nbLinks > MAX_LINKS) {
+				throw new IllegalArgumentException("Invalid number of links");
+			}
+			logger.debug("Nb Links = " + nbLinks);
+
+			int nbGateways = gameCommunicator.nextValue();
+			if (nbGateways < MIN_GATEWAYS || nbGateways > MAX_GATEWAYS || nbGateways >= nbNodes) {
+				throw new IllegalArgumentException("Invalid number of gateways");
+			}
+
+			logger.debug("Nb Gateways = " + nbGateways);
+
+			for (int i = 0; i < nbLinks; i++) {
+				int nodeA = gameCommunicator.nextValue();
+				int nodeB = gameCommunicator.nextValue();
+
+				if (nodeA < 0 || nodeB < 0 || nodeA >= nbNodes || nodeB >= nbNodes) {
+					throw new IllegalArgumentException("Invalid link definition");
+				}
+
+				logger.debug("Link " + nodeA + " " + nodeB);
+
+			}
+
+			for (int i = 0; i < nbGateways; i++) {
+				int gatewayId = gameCommunicator.nextValue();
+				if (gatewayId < 0 || gatewayId >= nbNodes) {
+					throw new IllegalArgumentException("Invalid gateway definition");
+				}
+				logger.debug("Gateway " + gatewayId);
+			}
+
+			return new Game(gameCommunicator);
 		}
 
 	}
 
 	public static void main(String args[]) {
-		Scanner in = new Scanner(System.in);
-		int N = in.nextInt(); // the total number of nodes in the level,
-								// including the gateways
-		int L = in.nextInt(); // the number of links
-		int E = in.nextInt(); // the number of exit gateways
-		for (int i = 0; i < L; i++) {
-			int N1 = in.nextInt(); // N1 and N2 defines a link between these
-									// nodes
-			int N2 = in.nextInt();
-		}
-		for (int i = 0; i < E; i++) {
-			int EI = in.nextInt(); // the index of a gateway node
-		}
+		GameCommunicator communicator = new StreamGameCommunicator(System.in, System.out);
 
-		// game loop
-		while (true) {
-			int SI = in.nextInt(); // The index of the node on which the Skynet
-									// agent is positioned this turn
+		Game game = new GameBuilder().createGame(communicator);
 
-			// Write an action using System.out.println()
-			// To debug: System.err.println("Debug messages...");
-
-			System.out.println("0 1"); // Example: 0 1 are the indices of the
-										// nodes you wish to sever the link
-										// between
-		}
+		// // game loop
+		// while (true) {
+		// int SI = in.nextInt(); // The index of the node on which the Skynet
+		// // agent is positioned this turn
+		//
+		// // Write an action using System.out.println()
+		// // To debug: System.err.println("Debug messages...");
+		//
+		// System.out.println("0 1"); // Example: 0 1 are the indices of the
+		// // nodes you wish to sever the link
+		// // between
+		// }
 	}
 }
