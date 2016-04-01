@@ -20,11 +20,20 @@ public class GameBuilderTest {
 	@Test
 	public void should_return_game() {
 		// 2 nodes, 1 link, 1 gateway
-		List<Integer> inputs = Arrays.asList(2, 1, 1, 0, 1, 1);
+		int nbNodes = 2;
+		int nbLinks = 1;
+		int nbGateways = 1;
+		int gatewayId = 1;
+
+		List<Integer> inputs = Arrays.asList(nbNodes, nbLinks, nbGateways, 0, 1, gatewayId);
 		Player.GameCommunicator gameCommunicator = new IntegerListGameCommunicator(inputs);
 
 		Player.Game game = gameBuilder.createGame(gameCommunicator);
 		Assert.assertNotNull(game);
+		Assert.assertNotNull(game.getNodes());
+		Assert.assertNotNull(game.getGatewayIds());
+		Assert.assertEquals(nbNodes, game.getNodes().size());
+		Assert.assertEquals(nbGateways, game.getGatewayIds().size());
 	}
 
 	@Test
@@ -106,7 +115,7 @@ public class GameBuilderTest {
 	 * Gateway checks
 	 */
 	@Test
-	public void should_have_a_() {
+	public void should_have_a_correct_gateway() {
 		List<Integer> inputs = Arrays.asList(2, 1, 1, 0, 1, 5);
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(Matchers.equalTo("Invalid gateway definition"));

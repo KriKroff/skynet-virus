@@ -1,11 +1,11 @@
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
-/**
- * Auto-generated code below aims at helping you parse the standard input
- * according to the problem statement.
- **/
 class Player {
 
 	private static final Logger logger = new Logger();
@@ -58,61 +58,124 @@ class Player {
 	}
 
 	public static class Node {
+		private final int id;
+		private Set<Integer> peers = new HashSet<Integer>();
+
+		public Node(int id) {
+			this.id = id;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public void addPeer(int id) {
+			peers.add(id);
+		}
+
+		public void removePeer(int id) {
+			peers.remove(id);
+		}
+
+		public int getDegree() {
+			return peers.size();
+		}
 
 	}
 
 	public static class Game {
 
 		private GameCommunicator communicator;
+		private Map<Integer, Node> nodes;
+		private Set<Integer> gatewayIds;
 
-		public Game(GameCommunicator communicator) {
+		public Game(GameCommunicator communicator, Map<Integer, Node> nodes, Set<Integer> gatewayIds) {
 			this.communicator = communicator;
+			this.nodes = nodes;
+			this.gatewayIds = gatewayIds;
 		}
+
+		public Map<Integer, Node> getNodes() {
+			return nodes;
+		}
+
+		public Set<Integer> getGatewayIds() {
+			return gatewayIds;
+		}
+
 	}
 
 	public static class GameBuilder {
 
 		public Game createGame(GameCommunicator gameCommunicator) {
+			Map<Integer, Node> nodes = readNodes(gameCommunicator);
+
+			int nbLinks = readNbLinks(gameCommunicator);
+
+			int nbGateways = readNbGateways(gameCommunicator, nodes.size());
+
+			for (int i = 0; i < nbLinks; i++) {
+				int nodeAId = gameCommunicator.nextValue();
+				int nodeBId = gameCommunicator.nextValue();
+				if (nodeAId < 0 || nodeBId < 0 || nodeAId >= nodes.size() || nodeBId >= nodes.size()) {
+					throw new IllegalArgumentException("Invalid link definition");
+				}
+				logger.debug("Link " + nodeAId + " " + nodeBId);
+
+				Node nodeA = nodes.get(nodeAId);
+				Node nodeB = nodes.get(nodeBId);
+
+				nodeA.addPeer(nodeAId);
+				nodeA.addPeer(nodeBId);
+			}
+
+			Set<Integer> gatewayIds = new HashSet<Integer>();
+			for (int i = 0; i < nbGateways; i++) {
+				int gatewayId = gameCommunicator.nextValue();
+				if (gatewayId < 0 || gatewayId >= nodes.size()) {
+					throw new IllegalArgumentException("Invalid gateway definition");
+				}
+				logger.debug("Gateway " + gatewayId);
+
+				gatewayIds.add(gatewayId);
+			}
+
+			return new Game(gameCommunicator, nodes, gatewayIds);
+		}
+
+		Map<Integer, Node> readNodes(GameCommunicator gameCommunicator) {
+			Map<Integer, Node> nodes = new HashMap<>();
+
 			int nbNodes = gameCommunicator.nextValue();
 			if (nbNodes < MIN_NODES || nbNodes > MAX_NODES) {
 				throw new IllegalArgumentException("Invalid number of nodes");
 			}
 			logger.debug("Nb Nodes = " + nbNodes);
 
+			// populate node Map
+			for (int i = 0; i < nbNodes; i++) {
+				nodes.put(i, new Node(i));
+			}
+			return nodes;
+		}
+
+		int readNbLinks(GameCommunicator gameCommunicator) {
 			int nbLinks = gameCommunicator.nextValue();
 			if (nbLinks < MIN_LINKS || nbLinks > MAX_LINKS) {
 				throw new IllegalArgumentException("Invalid number of links");
 			}
 			logger.debug("Nb Links = " + nbLinks);
+			return nbLinks;
+		}
 
+		int readNbGateways(GameCommunicator gameCommunicator, int nbNodes) {
 			int nbGateways = gameCommunicator.nextValue();
 			if (nbGateways < MIN_GATEWAYS || nbGateways > MAX_GATEWAYS || nbGateways >= nbNodes) {
 				throw new IllegalArgumentException("Invalid number of gateways");
 			}
-
 			logger.debug("Nb Gateways = " + nbGateways);
 
-			for (int i = 0; i < nbLinks; i++) {
-				int nodeA = gameCommunicator.nextValue();
-				int nodeB = gameCommunicator.nextValue();
-
-				if (nodeA < 0 || nodeB < 0 || nodeA >= nbNodes || nodeB >= nbNodes) {
-					throw new IllegalArgumentException("Invalid link definition");
-				}
-
-				logger.debug("Link " + nodeA + " " + nodeB);
-
-			}
-
-			for (int i = 0; i < nbGateways; i++) {
-				int gatewayId = gameCommunicator.nextValue();
-				if (gatewayId < 0 || gatewayId >= nbNodes) {
-					throw new IllegalArgumentException("Invalid gateway definition");
-				}
-				logger.debug("Gateway " + gatewayId);
-			}
-
-			return new Game(gameCommunicator);
+			return nbGateways;
 		}
 
 	}
