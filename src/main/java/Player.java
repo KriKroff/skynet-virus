@@ -63,6 +63,10 @@ class Player {
 			return id;
 		}
 
+		public Set<Integer> getPeers() {
+			return peers;
+		}
+
 		public void addPeer(int id) {
 			peers.add(id);
 		}
@@ -74,6 +78,24 @@ class Player {
 		public int getDegree() {
 			return peers.size();
 		}
+	}
+
+	public static class Pair<T> {
+		private final T first;
+		private final T second;
+
+		public Pair(T a, T b) {
+			first = a;
+			second = b;
+		}
+
+		public T getFirst() {
+			return first;
+		}
+
+		public T getSecond() {
+			return second;
+		}
 
 	}
 
@@ -82,6 +104,8 @@ class Player {
 		private GameCommunicator communicator;
 		private Map<Integer, Node> nodes;
 		private Set<Integer> gatewayIds;
+
+		int skynetNodeId = -2;
 
 		public Game(GameCommunicator communicator, Map<Integer, Node> nodes, Set<Integer> gatewayIds) {
 			this.communicator = communicator;
@@ -95,6 +119,39 @@ class Player {
 
 		public Set<Integer> getGatewayIds() {
 			return gatewayIds;
+		}
+
+		void cutLink(int nodeA, int nodeB) {
+			nodes.get(nodeA).removePeer(nodeB);
+			nodes.get(nodeB).removePeer(nodeA);
+			communicator.cutLink(nodeA, nodeB);
+		}
+
+		Pair<Integer> findLinkTocut() {
+			Node skynetNode = nodes.get(skynetNodeId);
+			for (int peerId : skynetNode.getPeers()) {
+				if (gatewayIds.contains(peerId)) {
+					return new Pair(skynetNodeId, peerId);
+				}
+			}
+			return null;
+		}
+
+		public void start() {
+			while (true && skynetNodeId != -1) {
+				skynetNodeId = communicator.nextValue();
+				if (skynetNodeId == -1) { // exit Game
+					break;
+				}
+
+				Pair<Integer> link = findLinkTocut();
+				if (link != null) {
+					cutLink(link.getFirst(), link.getSecond());
+				} else {
+					logger.debug("No link to cut");
+					break;
+				}
+			}
 		}
 
 	}
@@ -193,17 +250,6 @@ class Player {
 
 		Game game = new GameBuilder().createGame(communicator);
 
-		// // game loop
-		// while (true) {
-		// int SI = in.nextInt(); // The index of the node on which the Skynet
-		// // agent is positioned this turn
-		//
-		// // Write an action using System.out.println()
-		// // To debug: System.err.println("Debug messages...");
-		//
-		// System.out.println("0 1"); // Example: 0 1 are the indices of the
-		// // nodes you wish to sever the link
-		// // between
-		// }
+		game.start();
 	}
 }
