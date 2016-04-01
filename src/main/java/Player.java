@@ -1,4 +1,4 @@
-package com.github.krikroff.coddinggame.skynet;
+
 
 import java.util.Scanner;
 
