@@ -35,7 +35,7 @@ public class GameTest {
 		nodes.put(startNode.getId(), startNode);
 		nodes.put(gateway.getId(), gateway);
 
-		return new Player.Game(communicator, nodes, new HashSet<Integer>(Arrays.asList(gateway.getId())));
+		return new Player.Game(nodes, new HashSet<Integer>(Arrays.asList(gateway.getId())));
 	}
 
 	@Test
@@ -54,8 +54,6 @@ public class GameTest {
 		Assert.assertFalse(startNode.getPeers().contains(gateway.getId()));
 		Assert.assertFalse(gateway.getPeers().contains(startNode.getId()));
 
-		Assert.assertEquals("1 2", out.toString().trim());
-
 	}
 
 	@Test
@@ -71,7 +69,7 @@ public class GameTest {
 		Player.Node startNode = game.getNodes().get(stage1StartId);
 		Player.Node gateway = game.getNodes().get(stage1ExitId);
 
-		Player.Pair<Integer> linkToCut = game.findLinkToCut();
+		Player.Pair<Integer> linkToCut = game.findLinkToCut(stage1StartId);
 
 		int minId = Math.min(linkToCut.getFirst(), linkToCut.getSecond());
 		int maxId = Math.max(linkToCut.getFirst(), linkToCut.getSecond());
@@ -80,4 +78,25 @@ public class GameTest {
 		Assert.assertEquals(Math.max(stage1StartId, stage1ExitId), maxId);
 	}
 
+	@Test
+	public void testFindLinkTocut_stage2() {
+		InputStream in = new ByteArrayInputStream("4 4 1 0 1 0 2 1 3 2 3 3 0 2".getBytes());
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		Player.GameCommunicator communicator = new Player.StreamGameCommunicator(in, new PrintStream(out, true));
+		Player.GameBuilder gameBuilder = new Player.GameBuilder();
+
+		Player.Game game = gameBuilder.createGame(communicator);
+		int nbLinks = 4;
+		Player.Pair<Integer> findLinkToCut = null;
+		int skynetNodeId = 0;
+		while ((findLinkToCut = game.findLinkToCut(skynetNodeId)) != null) {
+			game.cutLink(findLinkToCut.getFirst(), findLinkToCut.getSecond());
+			nbLinks--;
+			Player.Pair<Integer> nextLink = game.findLinkToCut(skynetNodeId);
+			if (nextLink != null) {
+				skynetNodeId = nextLink.getSecond();
+			}
+		}
+		Assert.assertEquals(2, nbLinks);
+	}
 }

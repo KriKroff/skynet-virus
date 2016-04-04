@@ -84,10 +84,6 @@ class Player {
 			}
 		}
 
-		public int getDegree() {
-			return peers.size();
-		}
-
 		public int getNbLinksCut() {
 			return nbLinksCut;
 		}
@@ -162,8 +158,7 @@ class Player {
 
 		int skynetNodeId = -2;
 
-		public Game(GameCommunicator communicator, Map<Integer, Node> nodes, Set<Integer> gatewayIds) {
-			this.communicator = communicator;
+		public Game(Map<Integer, Node> nodes, Set<Integer> gatewayIds) {
 			this.nodes = nodes;
 			this.gatewayIds = gatewayIds;
 		}
@@ -179,11 +174,10 @@ class Player {
 		void cutLink(int nodeA, int nodeB) {
 			getNode(nodeA).removePeer(nodeB);
 			getNode(nodeB).removePeer(nodeA);
-			communicator.cutLink(nodeA, nodeB);
 		}
 
-		Pair<Integer> findLinkToCut() {
-			Optional<Path> shortestPathOpt = findShortestPathsToGateway().stream()
+		Pair<Integer> findLinkToCut(int skynetNodeId) {
+			Optional<Path> shortestPathOpt = findShortestPathsToGateway(skynetNodeId).stream()
 					.min(Comparator.comparing(Path::getLength).thenComparing(Path::getVisitedCoefficient));
 			if (shortestPathOpt.isPresent()) {
 				Deque<Node> shortestPathDeque = shortestPathOpt.get().asDeque();
@@ -201,7 +195,7 @@ class Player {
 			return nodes.get(nodeId);
 		}
 
-		List<Path> findShortestPathsToGateway() {
+		List<Path> findShortestPathsToGateway(int skynetNodeId) {
 			Node currentPosition = getNode(skynetNodeId);
 			Deque<Path> toVisit = new ArrayDeque<Path>();
 
@@ -214,6 +208,8 @@ class Player {
 			while (!toVisit.isEmpty()) {
 				Path currentPath = toVisit.poll();
 				if (currentPath.getLength() > shortestPath) {
+					// stop breadth-first algorithm
+					// a shorter solution has been found
 					break;
 				}
 
@@ -237,23 +233,6 @@ class Player {
 			return shortestPaths;
 		}
 
-		public void start() {
-			while (true && skynetNodeId != -1) {
-				skynetNodeId = communicator.nextValue();
-				if (skynetNodeId == -1) { // exit Game
-					break;
-				}
-
-				Pair<Integer> link = findLinkToCut();
-				if (link != null) {
-					cutLink(link.getFirst(), link.getSecond());
-				} else {
-					logger.debug("No link to cut");
-					break;
-				}
-			}
-		}
-
 	}
 
 	public static class GameBuilder {
@@ -269,7 +248,7 @@ class Player {
 
 			Set<Integer> gatewayIds = readGateways(gameCommunicator, nodes.size(), nbGateways);
 
-			return new Game(gameCommunicator, nodes, gatewayIds);
+			return new Game(nodes, gatewayIds);
 		}
 
 		Map<Integer, Node> readGraph(GameCommunicator gameCommunicator, int nbNodes, int nbLinks) {
@@ -348,8 +327,22 @@ class Player {
 	public static void main(String args[]) {
 		GameCommunicator communicator = new StreamGameCommunicator(System.in, System.out);
 
+		int skynetNodeId = -2;
 		Game game = new GameBuilder().createGame(communicator);
+		while (true && skynetNodeId != -1) {
+			skynetNodeId = communicator.nextValue();
+			if (skynetNodeId == -1) { // exit Game
+				break;
+			}
 
-		game.start();
+			Pair<Integer> link = game.findLinkToCut(skynetNodeId);
+			if (link != null) {
+				game.cutLink(link.getFirst(), link.getSecond());
+				communicator.cutLink(link.getFirst(), link.getSecond());
+			} else {
+				logger.debug("No link to cut");
+				break;
+			}
+		}
 	}
 }
