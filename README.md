@@ -3,6 +3,7 @@
 
 ### Technical stories
 - TS-01 : Project bootstrap
+- TS-02 : Project Release
 
 ### User Stories 
 - US-01 : User can create a new graph from input

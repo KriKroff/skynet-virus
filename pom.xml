@@ -6,7 +6,7 @@
 	<groupId>com.github.krikroff</groupId>
 	<artifactId>codinggame-skynet-virus</artifactId>
 	<name>Skynet-Virus</name>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 	<description>Solution to Coding Game Skynet : The Virus</description>
 	<packaging>jar</packaging>
