@@ -1,10 +1,14 @@
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -56,6 +60,7 @@ class Player {
 	public static class Node {
 		private final int id;
 		private Set<Integer> peers = new HashSet<Integer>();
+		private int nbLinksCut = 0;
 
 		public Node(int id) {
 			this.id = id;
@@ -74,11 +79,17 @@ class Player {
 		}
 
 		public void removePeer(int id) {
-			peers.remove(id);
+			if (peers.remove(id)) {
+				nbLinksCut++;
+			}
 		}
 
 		public int getDegree() {
 			return peers.size();
+		}
+
+		public int getNbLinksCut() {
+			return nbLinksCut;
 		}
 	}
 
@@ -102,30 +113,42 @@ class Player {
 
 	public static class Path {
 
-		private int currentId;
+		private Node node;
 
-		private Path subPath;
+		private Path parent;
 
-		public Path(int nodeId) {
-			this.currentId = nodeId;
+		public Path(Node node) {
+			this.node = node;
 		}
 
-		public Path(int nodeId, Path subPath) {
-			this.currentId = nodeId;
-			this.subPath = subPath;
+		public Path(Node node, Path subPath) {
+			this.node = node;
+			this.parent = subPath;
 		}
 
-		public int getEnd() {
-			return currentId;
+		public Node getNode() {
+			return node;
 		}
 
-		public Deque<Integer> asDeque() {
-			Deque<Integer> queue = new ArrayDeque<Integer>();
-			queue.add(currentId);
-			Path path = subPath;
+		public int getLength() {
+			return 1 + (parent != null ? parent.getLength() : 0);
+		}
+
+		public int getVisitedCoefficient() {
+			return node.getNbLinksCut() + (parent != null ? parent.getVisitedCoefficient() : 0);
+		}
+
+		public Path getParent() {
+			return parent;
+		}
+
+		public Deque<Node> asDeque() {
+			Deque<Node> queue = new ArrayDeque<Node>();
+			queue.add(node);
+			Path path = parent;
 			while (path != null) {
-				queue.addFirst(path.getEnd());
-				path = path.subPath;
+				queue.addFirst(path.getNode());
+				path = path.getParent();
 			}
 			return queue;
 		}
@@ -154,23 +177,17 @@ class Player {
 		}
 
 		void cutLink(int nodeA, int nodeB) {
-			nodes.get(nodeA).removePeer(nodeB);
-			nodes.get(nodeB).removePeer(nodeA);
+			getNode(nodeA).removePeer(nodeB);
+			getNode(nodeB).removePeer(nodeA);
 			communicator.cutLink(nodeA, nodeB);
 		}
 
-		Pair<Integer> findLinkTocut() {
-			Node skynetNode = nodes.get(skynetNodeId);
-			// Case 1 : gateway is linked to current position
-			for (int peerId : skynetNode.getPeers()) {
-				if (isGateway(peerId)) {
-					return new Pair<Integer>(skynetNodeId, peerId);
-				}
-			}
-
-			Deque<Integer> shortestPath = findShortestPathToGateway();
-			if (shortestPath != null) {
-				return new Pair<Integer>(shortestPath.pollFirst(), shortestPath.pollFirst());
+		Pair<Integer> findLinkToCut() {
+			Optional<Path> shortestPathOpt = findShortestPathsToGateway().stream()
+					.min(Comparator.comparing(Path::getLength).thenComparing(Path::getVisitedCoefficient));
+			if (shortestPathOpt.isPresent()) {
+				Deque<Node> shortestPathDeque = shortestPathOpt.get().asDeque();
+				return new Pair<Integer>(shortestPathDeque.pollFirst().getId(), shortestPathDeque.pollFirst().getId());
 			}
 
 			return null;
@@ -180,26 +197,44 @@ class Player {
 			return gatewayIds.contains(id);
 		}
 
-		Deque<Integer> findShortestPathToGateway() {
-			Set<Integer> visitedNodes = new HashSet<Integer>(nodes.size());
+		private Node getNode(int nodeId) {
+			return nodes.get(nodeId);
+		}
+
+		List<Path> findShortestPathsToGateway() {
+			Node currentPosition = getNode(skynetNodeId);
 			Deque<Path> toVisit = new ArrayDeque<Path>();
-			toVisit.add(new Path(skynetNodeId));
+
+			Set<Integer> visitedNodes = new HashSet<Integer>(nodes.size());
+			toVisit.add(new Path(currentPosition));
+
+			int shortestPath = Integer.MAX_VALUE;
+			List<Path> shortestPaths = new ArrayList<Path>();
 
 			while (!toVisit.isEmpty()) {
 				Path currentPath = toVisit.poll();
-				visitedNodes.add(currentPath.getEnd());
-				Node node = nodes.get(currentPath.getEnd());
+				if (currentPath.getLength() > shortestPath) {
+					break;
+				}
+
+				visitedNodes.add(currentPath.getNode().getId());
+				Node node = currentPath.getNode();
+
 				for (int peerId : node.getPeers()) {
+					Node peer = getNode(peerId);
 					if (isGateway(peerId)) {
-						return new Path(peerId, currentPath).asDeque();
+						Path pathFound = new Path(peer, currentPath);
+						shortestPaths.add(pathFound);
+						shortestPath = pathFound.getLength();
+						break;
 					} else {
 						if (!visitedNodes.contains(peerId) && !toVisit.contains(peerId)) {
-							toVisit.addLast(new Path(peerId, currentPath));
+							toVisit.addLast(new Path(peer, currentPath));
 						}
 					}
 				}
 			}
-			return null;
+			return shortestPaths;
 		}
 
 		public void start() {
@@ -209,7 +244,7 @@ class Player {
 					break;
 				}
 
-				Pair<Integer> link = findLinkTocut();
+				Pair<Integer> link = findLinkToCut();
 				if (link != null) {
 					cutLink(link.getFirst(), link.getSecond());
 				} else {

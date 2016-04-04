@@ -71,7 +71,7 @@ public class GameTest {
 		Player.Node startNode = game.getNodes().get(stage1StartId);
 		Player.Node gateway = game.getNodes().get(stage1ExitId);
 
-		Player.Pair<Integer> linkToCut = game.findLinkTocut();
+		Player.Pair<Integer> linkToCut = game.findLinkToCut();
 
 		int minId = Math.min(linkToCut.getFirst(), linkToCut.getSecond());
 		int maxId = Math.max(linkToCut.getFirst(), linkToCut.getSecond());
